@@ -53,9 +53,10 @@ public class CountryPicker extends DialogFragment implements
 	 * Use collator to sort locale-aware.
 	 */
 	private static final Collator sCollator = Collator.getInstance();
+    private int rowResourceId;
 
 
-	/**
+    /**
 	 * Set listener
 	 *
 	 * @param listener
@@ -128,10 +129,12 @@ public class CountryPicker extends DialogFragment implements
 	 * @param dialogTitle
 	 * @return
 	 */
-	public static CountryPicker newInstance(String dialogTitle) {
+	public static CountryPicker newInstance(String dialogTitle, final String selectedIsoCode, final int rowResourceId) {
 		CountryPicker picker = new CountryPicker();
 		Bundle bundle = new Bundle();
 		bundle.putString("dialogTitle", dialogTitle);
+		bundle.putString("selectedIsoCode", selectedIsoCode);
+        bundle.putInt("resourceId", rowResourceId);
 		picker.setArguments(bundle);
 		return picker;
 	}
@@ -150,15 +153,30 @@ public class CountryPicker extends DialogFragment implements
 
 		// Set dialog title if show as dialog
 		Bundle args = getArguments();
+        int selectedPosition = ListView.INVALID_POSITION;
 		if (args != null) {
-			String dialogTitle = args.getString("dialogTitle");
-			getDialog().setTitle(dialogTitle);
+            rowResourceId = args.getInt("resourceId", R.layout.row);
+			final String dialogTitle = args.getString("dialogTitle");
+            if (dialogTitle != null) {
+                getDialog().setTitle(dialogTitle);
+            }
 
 			int width = getResources().getDimensionPixelSize(
 					R.dimen.cp_dialog_width);
 			int height = getResources().getDimensionPixelSize(
 					R.dimen.cp_dialog_height);
 			getDialog().getWindow().setLayout(width, height);
+            final String selectedIsoCode = args.getString("selectedIsoCode");
+            if (selectedIsoCode != null) {
+                int i = 0;
+                for (final Country c : allCountriesList) {
+                    if (c.getCode().equals(selectedIsoCode)) {
+                        selectedPosition = i;
+                        break;
+                    }
+                    i++;
+                }
+            }
 		}
 
 		// Get view components
@@ -168,8 +186,21 @@ public class CountryPicker extends DialogFragment implements
 				.findViewById(R.id.country_picker_listview);
 
 		// Set adapter
-		adapter = new CountryListAdapter(getActivity(), selectedCountriesList);
+		adapter = new CountryListAdapter(getActivity(), selectedCountriesList, rowResourceId);
 		countryListView.setAdapter(adapter);
+        countryListView.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
+        if (selectedPosition != ListView.INVALID_POSITION) {
+            countryListView.setItemChecked(selectedPosition, true);
+        }
+        countryListView.clearFocus();
+        final int selectedPositionFinal = selectedPosition;
+        countryListView.post(new Runnable() {
+
+            @Override
+            public void run() {
+                countryListView.setSelection(selectedPositionFinal);
+            }
+        });
 
 		// Inform listener
 		countryListView.setOnItemClickListener(new OnItemClickListener() {

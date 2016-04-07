@@ -17,7 +17,8 @@ import com.countrypicker.R.drawable;
 
 public class CountryListAdapter extends BaseAdapter {
 
-	private Context context;
+    private final int rowResourceId;
+    private Context context;
 	List<Country> countries;
 	LayoutInflater inflater;
 
@@ -31,7 +32,7 @@ public class CountryListAdapter extends BaseAdapter {
 	 * @param drawableName
 	 * @return
 	 */
-	private int getResId(String drawableName) {
+	private static int getResId(String drawableName) {
 
 		try {
 			Class<drawable> res = R.drawable.class;
@@ -50,10 +51,11 @@ public class CountryListAdapter extends BaseAdapter {
 	 * @param context
 	 * @param countries
 	 */
-	public CountryListAdapter(Context context, List<Country> countries) {
+	public CountryListAdapter(Context context, List<Country> countries, final int rowResourceId) {
 		super();
 		this.context = context;
 		this.countries = countries;
+        this.rowResourceId = rowResourceId;
 		inflater = (LayoutInflater) this.context
 				.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 	}
@@ -74,7 +76,7 @@ public class CountryListAdapter extends BaseAdapter {
 	}
 
 	/**
-	 * Return row for each country
+	 * Return country_row for each country
 	 */
 	@Override
 	public View getView(int position, View convertView, ViewGroup parent) {
@@ -82,9 +84,16 @@ public class CountryListAdapter extends BaseAdapter {
 		Cell cell;
 		Country country = countries.get(position);
 
+		return CountryListAdapter.getView(rowResourceId, inflater, country, convertView, parent);
+	}
+
+	public static View getView(final int rowResourceId, final LayoutInflater inflater, final Country country, View convertView, ViewGroup parent) {
+		View cellView = convertView;
+		Cell cell;
+
 		if (convertView == null) {
 			cell = new Cell();
-			cellView = inflater.inflate(R.layout.row, parent, false);
+			cellView = inflater.inflate(rowResourceId, parent, false);
 			cell.textView = (TextView) cellView.findViewById(R.id.row_title);
 			cell.imageView = (ImageView) cellView.findViewById(R.id.row_icon);
 			cellView.setTag(cell);
@@ -98,7 +107,10 @@ public class CountryListAdapter extends BaseAdapter {
 		String drawableName = "flag_"
 				+ country.getCode().toLowerCase(Locale.ENGLISH);
 		cell.imageView.setContentDescription(country.getName());
-		cell.imageView.setImageResource(getResId(drawableName));
+        final int countryFlagResId = getResId(drawableName);
+        if (countryFlagResId != -1) {
+            cell.imageView.setImageResource(countryFlagResId);
+        }
 		return cellView;
 	}
 
