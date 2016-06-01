@@ -40,7 +40,7 @@ public class CountryListAdapter extends BaseAdapter {
 			int drawableId = field.getInt(null);
 			return drawableId;
 		} catch (Exception e) {
-			Log.e("COUNTRYPICKER", "Failure to get drawable id.", e);
+			Log.w("COUNTRYPICKER", "Failure to get drawable id.");
 		}
 		return -1;
 	}
@@ -110,7 +110,9 @@ public class CountryListAdapter extends BaseAdapter {
         final int countryFlagResId = getResId(drawableName);
         if (countryFlagResId != -1) {
             cell.imageView.setImageResource(countryFlagResId);
-        }
+        } else {
+			cell.imageView.setImageDrawable(null);
+		}
 		return cellView;
 	}
 

@@ -2,5 +2,6 @@
 
     <string name="search">Search&#8230;</string>
     <string name="Flag">Flag</string>
+    <string name="country_other">Other</string>
 
 </resources>

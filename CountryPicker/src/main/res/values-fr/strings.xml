@@ -2,4 +2,5 @@
 <resources>
     <string name="Flag">Drapeau</string>
     <string name="search">Chercher…</string>
+    <string name="country_other">Un autre</string>
 </resources>

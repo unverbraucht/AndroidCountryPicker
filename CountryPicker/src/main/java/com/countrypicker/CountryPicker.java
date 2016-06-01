@@ -54,6 +54,7 @@ public class CountryPicker extends DialogFragment implements
 	 */
 	private static final Collator sCollator = Collator.getInstance();
     private int rowResourceId;
+    private String[] allowedCountries;
 
 
     /**
@@ -97,14 +98,37 @@ public class CountryPicker extends DialogFragment implements
 	private List<Country> getAllCountries() {
 		if (allCountriesList == null) {
 			try {
-				allCountriesList = new ArrayList<Country>();
+                final String[] allCountryCodes = Locale.getISOCountries();
+				allCountriesList = new ArrayList<>(allCountryCodes.length);
 
-				for (String cc : Locale.getISOCountries()) {
-					Country country = new Country();
-					country.setCode(cc);
-					country.setName(new Locale("", cc).getDisplayCountry());
-					allCountriesList.add(country);
-				}
+
+                if (allowedCountries != null && allowedCountries.length > 0) {
+                    for (String cc : allowedCountries) {
+                        if (cc.equals("--")) {
+                            Country country = new Country();
+                            country.setCode(cc);
+                            country.setName(getString(R.string.country_other));
+                            allCountriesList.add(country);
+                            continue;
+                        }
+                        for (final String deviceCountryCode : allCountryCodes) {
+                            if (deviceCountryCode.equals(cc)) {
+                                Country country = new Country();
+                                country.setCode(cc);
+                                country.setName(new Locale("", cc).getDisplayCountry());
+                                allCountriesList.add(country);
+                                break;
+                            }
+                        }
+                    }
+                } else {
+                    for (String cc : allCountryCodes) {
+                        Country country = new Country();
+                        country.setCode(cc);
+                        country.setName(new Locale("", cc).getDisplayCountry());
+                        allCountriesList.add(country);
+                    }
+                }
 
 				// Sort the all countries list based on country name
 				Collections.sort(allCountriesList, this);
@@ -129,12 +153,14 @@ public class CountryPicker extends DialogFragment implements
 	 * @param dialogTitle
 	 * @return
 	 */
-	public static CountryPicker newInstance(String dialogTitle, final String selectedIsoCode, final int rowResourceId) {
+	public static CountryPicker newInstance(String dialogTitle, final String selectedIsoCode, final String[] allowedCountries,
+											final int rowResourceId) {
 		CountryPicker picker = new CountryPicker();
 		Bundle bundle = new Bundle();
 		bundle.putString("dialogTitle", dialogTitle);
 		bundle.putString("selectedIsoCode", selectedIsoCode);
         bundle.putInt("resourceId", rowResourceId);
+        bundle.putStringArray("allowedCountries", allowedCountries);
 		picker.setArguments(bundle);
 		return picker;
 	}
@@ -148,13 +174,13 @@ public class CountryPicker extends DialogFragment implements
 		// Inflate view
 		View view = inflater.inflate(R.layout.country_picker, container, false);
 
-		// Get countries from the json
-		getAllCountries();
-
 		// Set dialog title if show as dialog
 		Bundle args = getArguments();
         int selectedPosition = ListView.INVALID_POSITION;
 		if (args != null) {
+            allowedCountries = args.getStringArray("allowedCountries");
+            getAllCountries();
+
             rowResourceId = args.getInt("resourceId", R.layout.row);
 			final String dialogTitle = args.getString("dialogTitle");
             if (dialogTitle != null) {
@@ -177,7 +203,9 @@ public class CountryPicker extends DialogFragment implements
                     i++;
                 }
             }
-		}
+		} else {
+            getAllCountries();
+        }
 
 		// Get view components
 		searchEditText = (EditText) view
